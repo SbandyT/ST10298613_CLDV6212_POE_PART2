@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "ST10298613_CLDV6212_POE_PART_": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7189",
+      "launchBrowser": false
+    }
+  }
+}
