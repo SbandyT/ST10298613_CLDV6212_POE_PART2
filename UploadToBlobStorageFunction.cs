@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,8 +19,12 @@ namespace ST10298613_CLDV6212_POE_PART_
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            string containerName = req.Query["containerName"];
-            string blobName = req.Query["blobName"];
+            log.LogInformation("Processing UploadToBlobStorageFunction request.");
+
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            dynamic data = JsonConvert.DeserializeObject(requestBody);
+            string containerName = data?.containerName;
+            string blobName = data?.blobName;
 
             if (string.IsNullOrEmpty(containerName) || string.IsNullOrEmpty(blobName))
             {

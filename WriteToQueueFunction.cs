@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,11 +16,15 @@ namespace ST10298613_CLDV6212_POE_PART_
     {
         [Function("WriteToQueueMessage")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
-            ILogger log)
+    [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
+    ILogger log)
         {
-            string queueName = req.Query["queueName"];
-            string message = req.Query["message"];
+            log.LogInformation("Processing WriteToQueueFunction request.");
+
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            dynamic data = JsonConvert.DeserializeObject(requestBody);
+            string queueName = data?.queueName;
+            string message = data?.message;
 
             if (string.IsNullOrEmpty(queueName) || string.IsNullOrEmpty(message))
             {

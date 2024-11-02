@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,15 +19,21 @@ namespace ST10298613_CLDV6212_POE_PART_
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            string tableName = req.Query["tableName"];
-            string partitionKey = req.Query["partitionKey"];
-            string rowKey = req.Query["rowKey"];
-            string data = req.Query["data"];
+            log.LogInformation("Processing StoreToAzureTableFunction request.");
 
-            if (string.IsNullOrEmpty(tableName) || string.IsNullOrEmpty(partitionKey) || string.IsNullOrEmpty(rowKey) || string.IsNullOrEmpty(data))
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            dynamic data = JsonConvert.DeserializeObject(requestBody);
+            string tableName = data?.tableName;
+            string partitionKey = data?.partitionKey;
+            string rowKey = data?.rowKey;
+            string dataValue = data?.data;
+
+            if (string.IsNullOrEmpty(tableName) || string.IsNullOrEmpty(partitionKey) ||
+                string.IsNullOrEmpty(rowKey) || string.IsNullOrEmpty(dataValue))
             {
                 return new BadRequestObjectResult("Table name, partition key, row key, and data must be provided.");
             }
+
 
             var connectionString = Environment.GetEnvironmentVariable("AzureStorage:ConnectionString");
             var serviceClient = new TableServiceClient(connectionString);

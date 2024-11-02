@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Microsoft.Azure.Functions.Worker;
 using Azure.Data.Tables;
 using System.Security.Cryptography.X509Certificates;
+using Newtonsoft.Json;
 
 
 
@@ -24,13 +25,16 @@ namespace ST10298613_CLDV6212_POE_PART_
             [Microsoft.Azure.Functions.Worker.HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            string shareName = req.Query["shareName"];
-            string fileName = req.Query["fileName"];
+            log.LogInformation("Processing WriteToAzureFilesFunction request.");
 
-            var file = req.Form.Files["file"];
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            dynamic data = JsonConvert.DeserializeObject(requestBody);
+            string shareName = data?.shareName;
+            string fileName = data?.fileName;
+
             if (string.IsNullOrEmpty(shareName) || string.IsNullOrEmpty(fileName))
             {
-                return new BadRequestObjectResult("No files uploaded.");
+                return new BadRequestObjectResult("Share name and file name must be provided.");
             }
 
             var connectionString = Environment.GetEnvironmentVariable("AzureStorage:ConnectionString");
